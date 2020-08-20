@@ -36,8 +36,6 @@ namespace MessageBoard.Controllers
     [HttpPost]
     public void Post([FromBody] Board board)
     {
-      Post associatedMessage = _db.Posts.FirstOrDefault(post => post.BoardId == board.BoardId);
-      board.Posts.Add(associatedMessage);
       _db.Boards.Add(board);
       _db.SaveChanges();
     }
@@ -46,9 +44,11 @@ namespace MessageBoard.Controllers
     [HttpGet("{id}")]
     public ActionResult<Board> Get(int id)
     {
-      Board newBoard = _db.Boards.FirstOrDefault(entry => entry.BoardId == id);
-      newBoard.Posts = _db.Posts.Where(posts => posts.BoardId == id).ToList();
-      return newBoard;
+      Board thisBoard = _db.Boards
+      .Include(board => board.Posts)
+      .ThenInclude(post => post.Messages)
+      .FirstOrDefault(entry => entry.BoardId == id);
+      return thisBoard;
     }
 
     [Authorize(Roles = Role.Admin)]

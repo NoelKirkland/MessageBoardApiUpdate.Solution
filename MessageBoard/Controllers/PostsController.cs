@@ -37,8 +37,6 @@ namespace MessageBoard.Controllers
   [HttpPost]
   public void Post([FromBody] Post post)
   {
-    Message associatedMessage = _db.Messages.FirstOrDefault(message => message.PostId == post.PostId);
-    post.Messages.Add(associatedMessage);
     _db.Posts.Add(post);
     _db.SaveChanges();
   }
@@ -47,9 +45,10 @@ namespace MessageBoard.Controllers
   [HttpGet("{id}")]
   public ActionResult<Post> Get(int id)
   {
-    Post newPost = _db.Posts.FirstOrDefault(entry => entry.PostId == id);
-    newPost.Messages = _db.Messages.Where(messages => messages.PostId == id).ToList();
-    return newPost;
+    Post thisPost = _db.Posts
+    .Include(post => post.Messages)
+    .FirstOrDefault(post => post.PostId == id);
+    return thisPost;
   }
 
   [Authorize(Roles = Role.Admin)]
